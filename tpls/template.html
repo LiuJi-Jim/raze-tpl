@@ -1,0 +1,128 @@
+<style>
+  .test-case {
+    padding: 10px;
+    border: 1px solid #000;
+  }
+</style>
+
+<h1>@@each/@@foreach（同义词）遍历数组</h1>
+<div class="test-case">
+  <ul>
+  @foreach (p in persons) {
+    <li>@p.name [@(p.email)] is @p.age ages.</li>
+  
+    @use li(p.name, p.email, p.age)
+  }
+  </ul>
+</div>
+<hr />
+
+<h1>@@objEach 遍历KV</h1>
+<div class="test-case">
+  <dl>
+  @objEach (k:v in kv) {
+    <dt>@k</dt>
+    <dd>@v</dd>
+  }
+  </dl>
+</div>
+<hr />
+
+<h1>@@block (body)后面把它override了，所以不应该看到Hello World</h1>
+<div class="test-case">
+  @block (body) {
+    <h2 style="color: red;">Hello world!</h2>
+  }
+</div>
+<hr />
+
+<h1>@@block (placeholder)本身是空的，后面把它override了，这里应该看到表格</h1>
+<div class="test-case">
+  @block (placeholder) {}
+</div>
+<hr />
+
+<h1>@@override (placeholder)这里不应看到任何东西，而是出现在上面的placeholder里</h1>
+<div class="test-case">
+  @override (placeholder) {
+    <table>
+    @each (row in rows) {
+      <tr>
+      @each (col in row) {
+        <td>@col.value</td>
+      }
+      </tr>
+    }
+    </table>
+  }
+</div>
+<hr />
+
+<h1>@@func li定义函数，在第一个数组循环里有调用，这里不应该看到任何东西</h1>
+<div class="test-case">
+  @func li(name, email, age) {
+    <li>@name [@(email)] is @age ages.</li>
+  }
+</div>
+<hr />
+
+<h1>@@override (body)重写body块，这里不应该看到任何东西，而是出现在上面的body块里</h1>
+<div class="test-case">
+  @override (body) {
+    <p style="color: green;">This is overwritten.</p>
+    @use total()
+  }
+</div>
+<hr />
+
+<h1>@@append (body)追加body块，这里不应该看到任何东西，而是出现在上面的body块之后</h1>
+<div class="test-case">
+  @append (body) {
+    <p style="color: red;">This is appended to `body`</p>
+  }
+</div>
+<hr />
+
+<h1>@@prepend (body)插入body块，这里不应该看到任何东西，而是出现在上面的body块之前</h1>
+<div class="test-case">
+  @prepend (body) {
+    <p style="color: blue;">This is prepended to `body`</p>
+  }
+</div>
+<hr />
+
+<h1>@@filter textarea(400, 200)文本块filter，这个filter是addFilter自己注册的</h1>
+<div class="test-case">
+  @filter textarea(400, 200) {
+    ## ETpl Contributors
+  
+    - errorrik
+    - otakustay
+    - firede
+  }
+</div>
+<hr />
+
+<h1>@@func total()定义函数，这里不应该看到任何东西，而是在上面的body块里调用</h1>
+<div class="test-case">
+  @func total() {
+    <h1>@(persons.length)</h1>
+  }
+</div>
+<hr />
+
+<h1>各种bad case测试</h1>
+<div class="test-case">
+  @func hehehehe() {
+    <div>@#老子就是任性要打<strong>}/128150479/{}(Y!@#$%^()[]*</strong>这些乱七八糟的你咬我？#@</div>
+    <div>那么问题来了：要打出<strong>“@#@##@”</strong>跟<strong>“@###@@@”</strong>怎么办，啦啦啦~</div>
+    @###@@@
+  }
+  
+  <div style="max-width:400px; max-height:240px; font-family:monospace;">@(-lorem | replace(/lorem/ig, '<span style="color:red; font-weight: bold;">--LOREM--</span>'))</div>
+  
+  <div style="max-width:400px; max-height:240px;">@(-rubbish | replace(@#/([{}()@#])/g#@, '<strong>$1</strong>'))</div>
+  
+  @use hehehehe()
+</div>
+<hr />
