@@ -21,3 +21,6 @@ var html = render(data);
 ## test and learn more syntax/features
 * `node test.js`
 * see `tpls/template.html` and `tpls/template.out.html`
+
+## references
+inspired by [kirbysayshi/vash](https://github.com/kirbysayshi/vash) and [aspnet/Razor](https://github.com/aspnet/Razor)
