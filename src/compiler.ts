@@ -12,14 +12,15 @@ export interface ICompiler {
 
 function parseExpression(expr: string): string {
   //console.log('parseExpression', expr);
-  var arr: string[] = [];
+  var arr: string[] = []; // 管道拆分后的所有分段
   var segment = '';
-  var or = false;
+  
   for (var i = 0, len = expr.length; i < len; ++i) {
     var curr = expr[i];
     var next = (i < len - 1) ? expr[i + 1] : '';
     if (curr === '|') {
       if (next !== '|') {
+        // 避免 || 运算符
         arr.push(segment);
         segment = '';
       } else {
@@ -31,10 +32,11 @@ function parseExpression(expr: string): string {
     }
   }
   if (segment !== '') {
+    // 最后一段
     arr.push(segment);
   }
-  var value = arr[0];
-  var pipes = arr.slice(1);
+  var value = arr[0]; // 最左边的值
+  var pipes = arr.slice(1); // 管道段落
   var result = value;
   for (var i = 0; i < pipes.length; ++i) {
     var curr = pipes[i].trim();
@@ -42,8 +44,10 @@ function parseExpression(expr: string): string {
     var open = curr.indexOf('(');
     var args = [];
     if (open > 0) {
+      // 有括号，是有参数的形式，如 xxx | replace(/a/ig, 'AAA')
       var close = utils.findMatching(curr, open);
       fn = curr.substring(0, open).trim();
+      // 对args进行一个规范化重新拼接，但似乎并没有什么卵用
       args = curr.substring(open + 1, close).split(',');
     }
     var arg = args.length > 0 ? (', ' + args.join(', ')) : '';
