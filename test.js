@@ -6,7 +6,7 @@ var tpl = fs.readFileSync(filename, 'utf-8');
 
 var data = { persons: [] };
 (function () {
-  var len = 1000;
+  var len = 100;
 
   for (var i = 0; i < len; i++) {
     data.persons.push({
@@ -16,6 +16,11 @@ var data = { persons: [] };
     })
   }
 })();
+
+data.kv = {};
+for (var i=0; i<10; ++i) {
+  data.kv['key-' + i] = 'value-' + i;
+}
 
 data.lorem = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
 data.rubbish = '}/128150479/{}(Y!@#$%^()[]*';
