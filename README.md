@@ -22,5 +22,8 @@ var html = render(data);
 * `node test.js`
 * see `tpls/template.html` and `tpls/template.out.html`
 
-## references
-inspired by [kirbysayshi/vash](https://github.com/kirbysayshi/vash) and [aspnet/Razor](https://github.com/aspnet/Razor)
+## inspired by
+* [aspnet/Razor](https://github.com/aspnet/Razor)
+* [magicdawn/razor-tmpl](https://github.com/magicdawn/razor-tmpl)
+* [aui/artTemplate](https://github.com/aui/artTemplate)
+* [ecomfe/etpl](https://github.com/ecomfe/etpl)
