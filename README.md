@@ -22,6 +22,29 @@ var html = render(data);
 * `node test.js`
 * see `tpls/template.html` and `tpls/template.out.html`
 
+## benchmark (for fun)
+```
+etpl
+2000 tests in 4649.02ms.
+430.20op/s.
+2.3245ms/op.
+-----------
+art-template
+2000 tests in 4054.16ms.
+493.32op/s.
+2.0271ms/op.
+-----------
+raze safe
+2000 tests in 4326.85ms.
+462.23op/s.
+2.1634ms/op.
+-----------
+raze unsafe
+2000 tests in 3840.70ms.
+520.74op/s.
+1.9203ms/op.
+```
+
 ## inspired by
 * [aspnet/Razor](https://github.com/aspnet/Razor)
 * [magicdawn/razor-tmpl](https://github.com/magicdawn/razor-tmpl)
