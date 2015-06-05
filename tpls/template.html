@@ -125,6 +125,8 @@
     @###@@@
   }
   
+  <div style="color:#f00;">试试访问不存在的模板变量：@(a_variable_doesnt_exists)</div>
+  
   <div style="max-width:400px; max-height:240px; font-family:monospace;">@(-lorem | replace(/lorem/ig, '<span style="color:red; font-weight: bold;">--LOREM--</span>'))</div>
   
   <div style="max-width:400px; max-height:240px;">@(-rubbish | replace(@#/([{}()@#])/g#@, '<strong>$1</strong>'))</div>
