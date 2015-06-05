@@ -1,15 +1,15 @@
 module filters {
   var RE_HTML_ENTITIES = /[&<>"']/g;
-  var HTML_ENTITIES = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
+  function htmlFilterReplacer($0) {
+    switch ($0) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&#39;';
+    }
+    return '';
   };
-  function htmlFilterReplacer(c) {
-    return HTML_ENTITIES[c];
-  }
 
   export function html(input: any): string {
     return String(input).replace(RE_HTML_ENTITIES, htmlFilterReplacer);
