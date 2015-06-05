@@ -1,5 +1,5 @@
 # raze-tpl
-A js template engine with syntax like Microsoft Razor
+A js template engine with syntax like [Microsoft Razor Render Engine](https://github.com/aspnet/Razor)
 
 ## how to use
 ### build
