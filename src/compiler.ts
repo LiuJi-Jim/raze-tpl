@@ -188,6 +188,7 @@ export function compile(input: string, obj: ITemplateObject, opts: IRazeOptions)
   };
 
   fn.__renderFn = localFn;
+  fn.__template = obj;
 
   return fn;
 }

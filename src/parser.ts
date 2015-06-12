@@ -346,9 +346,12 @@ class Parser {
 
     var loop_head: string;
     if (loop_type === 'objEach') {
-      loop_head = `if (__hs.isObject(${items})) for(var ${index} in ${items}){var ${iter}=${items}[${index}];`;
+      var keys = utils.nextGUID();
+      var $i = utils.nextGUID();
+      //loop_head = `if (__hs.isObject(${items})) for(var ${index} in ${items}){var ${iter}=${items}[${index}];`;
+      loop_head = `if (__hs.isObject(${items})){ var ${keys}=Object.getOwnPropertyNames(${items}); for(var ${$i}=0,${length}=${keys}.length;${$i}<${length};++${$i}){var ${index}=${keys}[${$i}], ${iter}=${items}[${index}];`;
     } else {
-      loop_head = `if (__hs.isArray(${items})) for(var ${index}=0,${length}=${items}.length;${index}<${length};++${index}){var ${iter}=${items}[${index}];`;
+      loop_head = `if (__hs.isArray(${items})){ for(var ${index}=0,${length}=${items}.length;${index}<${length};++${index}){var ${iter}=${items}[${index}];`;
     }
     this.tok(utils.TokenType.CODE_BLOCK, loop_head);
 
@@ -359,7 +362,7 @@ class Parser {
     this.tokens = this.tokens.concat(inner_tokens);
 
     // 3.}
-    this.tok(utils.TokenType.CODE_BLOCK, '}');
+    this.tok(utils.TokenType.CODE_BLOCK, '}}');
 
     return this.consumed = sec_big;
   }

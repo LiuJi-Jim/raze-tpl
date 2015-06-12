@@ -31,6 +31,17 @@ for (var i=0; i<10; ++i) {
   }
   data.rows.push(col);
 }
+data.nested = {
+  value: 'root'
+};
+var nested = data.nested;
+for (var i=0; i<5; ++i) {
+  var n2 = {
+    value: 'nested-' + i
+  };
+  nested.nested = n2;
+  nested = n2;
+}
 
 data.lorem = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
 data.rubbish = '}/128150479/{}(Y!@#$%^()[]*';
@@ -39,6 +50,9 @@ raze.addFilter('textarea', function(str, width, height) {
   width = width || 200;
   height = height || 200;
   return '<textarea style="width:'+width+'px; height:'+height+'px;">' + str + '</textarea>';
+});
+raze.addFilter('json', function(obj) {
+  return JSON.stringify(obj, null, '  ');
 });
 
 console.time('compile');

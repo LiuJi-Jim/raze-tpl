@@ -1,6 +1,7 @@
 interface RenderFunc {
   (data: any): string;
   __renderFn?: Function;
+  __template?: ITemplateObject;
   addFilter?(name: string, fn: Function);
 }
 

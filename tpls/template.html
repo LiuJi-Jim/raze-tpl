@@ -105,6 +105,8 @@
     - errorrik
     - otakustay
     - firede
+
+    @(nested | json)
   }
 </div>
 <hr />
@@ -114,6 +116,22 @@
   @func total() {
     <h1>@(persons.length)</h1>
   }
+</div>
+<hr />
+
+<h1>作用域 & 递归</h1>
+<div class="test-case">
+  @func nested(nested, depth) {
+    <div @if(depth>0){style="padding-left: 2em;"}>
+      <p>depth = @depth</p>
+      <p>@nested.value</p>
+      @if (nested.nested) {
+        @use nested(nested.nested, depth + 1)
+      }
+    </div>
+  }
+
+  @use nested(nested, 0)
 </div>
 <hr />
 
