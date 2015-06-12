@@ -22,7 +22,7 @@ var html = render(data);
 * `node test.js`
 * see `tpls/template.html` and `tpls/template.out.html`
 
-## syntax and fetures
+## syntax and features
 
 ### variable outputing
 #### implicit
