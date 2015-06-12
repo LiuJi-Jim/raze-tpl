@@ -61,6 +61,7 @@ var html = render(data);
   <dt>@k</dt>
   <dd>@v</dd>
 }
+```
 #### conditions
 ```
 @if (condition) {
