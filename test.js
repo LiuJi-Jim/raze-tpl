@@ -61,6 +61,7 @@ var render = raze(tpl, {
 });
 console.timeEnd('compile');
 console.log(render.__renderFn.toString());
+console.log(render.__template.funcs.condition.toString());
 
 console.time('render');
 for (var i=0; i<100; ++i) {

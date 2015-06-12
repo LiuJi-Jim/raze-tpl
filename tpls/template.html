@@ -150,5 +150,18 @@
   <div style="max-width:400px; max-height:240px;">@(-rubbish | replace(@#/([{}()@#])/g#@, '<strong>$1</strong>'))</div>
   
   @use hehehehe()
+
+  @func condition(val) {
+    @if (val > 0) {
+      <p style="color:red">@(val)&gt;0</p>
+    } else if (val < 0) {
+      <p style="color:blue">@(val)&lt;0</p>
+    } else {
+      <p>@(val)==0</p>
+    }
+  }
+  @use condition(100)
+  @use condition(-100)
+  @use condition(0)
 </div>
 <hr />

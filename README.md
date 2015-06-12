@@ -73,6 +73,14 @@ var html = render(data);
 } else {
   <span>Ooops..</span>
 }
+
+@if (condition) {
+  <span>Yes!!</span>
+} else if (another_condition) {
+  <span>So so..</span>
+} else {
+  <span>Ooops..</span>
+}
 ```
 
 ### function defination add calling
