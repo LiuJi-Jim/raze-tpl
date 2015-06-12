@@ -18,7 +18,7 @@ var render = raze(tpl, {
 var html = render(data);
 ```
 
-## test and learn more syntax/features
+## test and see the demo of syntax/features
 * `node test.js`
 * see `tpls/template.html` and `tpls/template.out.html`
 
