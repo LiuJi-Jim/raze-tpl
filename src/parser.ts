@@ -348,8 +348,8 @@ class Parser {
     if (loop_type === 'objEach') {
       var keys = utils.nextGUID();
       var $i = utils.nextGUID();
-      //loop_head = `if (__hs.isObject(${items})) for(var ${index} in ${items}){var ${iter}=${items}[${index}];`;
-      loop_head = `if (__hs.isObject(${items})){ var ${keys}=Object.getOwnPropertyNames(${items}); for(var ${$i}=0,${length}=${keys}.length;${$i}<${length};++${$i}){var ${index}=${keys}[${$i}], ${iter}=${items}[${index}];`;
+      loop_head = `if (__hs.isObject(${items})) for(var ${index} in ${items}){var ${iter}=${items}[${index}];`;
+      //loop_head = `if (__hs.isObject(${items})){ var ${keys}=Object.getOwnPropertyNames(${items}); for(var ${$i}=0,${length}=${keys}.length;${$i}<${length};++${$i}){var ${index}=${keys}[${$i}], ${iter}=${items}[${index}];`;
     } else {
       loop_head = `if (__hs.isArray(${items})){ for(var ${index}=0,${length}=${items}.length;${index}<${length};++${index}){var ${iter}=${items}[${index}];`;
     }
