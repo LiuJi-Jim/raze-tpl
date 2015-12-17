@@ -25,7 +25,6 @@ class Template implements ITemplateObject {
   import(name: string, data: any): string {
     let filename = path.join(this.opts.basedir, `${name}${this.opts.extname}`);
 
-    debugger;
     // console.log('importing', this.opts.filename, this.opts.basedir, filename);
     let opts = utils.extend({}, this.opts, {
       args: [],

@@ -527,7 +527,6 @@ class Parser {
    * @import(filename[, args = {}])
    */
   import(args) {
-    debugger;
     let comma = args.indexOf(',');
     let name;
     if (comma > 0) {

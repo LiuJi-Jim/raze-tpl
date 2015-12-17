@@ -1,6 +1,6 @@
 {
   "name": "raze-tpl",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A js template engine with syntax like Microsoft Razor Render Engine",
   "main": "dist/index.js",
   "scripts": {
