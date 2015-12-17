@@ -4,3 +4,4 @@ desktop.ini
 /dist
 /tmp
 /typings
+**/*.out.html
