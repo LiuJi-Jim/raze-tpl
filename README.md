@@ -4,13 +4,15 @@ A js template engine with syntax like [Microsoft Razor Render Engine](https://gi
 ## how to use
 
 ### install
+
 ```
 npm install raze-tpl
 ```
 
 ### use
+
 ```
-var raze = require('./index');
+var raze = require('raze-tpl');
 
 var tpl = fs.readFileSync(filename, 'utf-8');
 
@@ -22,43 +24,59 @@ var render = raze({
 var render = raze({
   filename: filename
 });
+// which will use fs.readFileSync
 
 var result = render(data);
 ```
 
 ### options
 
-`safe`: `true` to add try/catch to variables accessing (default to `true`)
-`strip`: `true` to remove whitespace (default to `false`)
-`extname`: define extname when using `import` and `extend` (default to `'.html'`)
-`plainObjEach`: `true` to use `Object.keys()` when loop on K-V objects (default to `true`)
+* `safe`
+> `true` to add try/catch to variables accessing (default to `true`)
+* `strip`
+> `true` to remove whitespace (default to `false`)
+* `extname`
+> define extname when using `import` and `extend` (default to `'.html'`)
+* `plainObjEach`
+> `true` to use `Object.keys()` when loop on K-V objects (default to `true`)
 
 ### test and see the demo of syntax/features
-* `node test/test.js`
+
+* `node test/test.js` (not published in npm package. only available in source code)
 * see `tpls/template.html` and `tpls/template.out.html`
 
 ## syntax and features
 
 ### variable outputing
+
 #### implicit
+
 ```
 <span>@some_variable[index]</span>
 ```
+
 #### explicit
+
 ```
 <span>@(some_variable[index])</span>
 ```
+
 #### no html escaping
+
 ```
 <span@(-some_variable[index])</span>
 ```
+
 #### filtering
+
 ```
 <span>@(some_variable[index] | replace(/lorem/ig, '>>$0<<')</span>
 ```
 
 ### flow control
+
 #### loop on array
+
 ```
 @each (value in arr) {
   <li>@value</li>
@@ -67,7 +85,9 @@ var result = render(data);
   <li>No.@index of arr is @value</li>
 }
 ```
+
 #### also available on k-v objects
+
 ```
 @each (value in kv) {
   <li>@value</li>
@@ -77,13 +97,17 @@ var result = render(data);
   <dd>@v</dd>
 }
 ```
-### alias foreach = each
+
+### "alias foreach=each"
+
 ```
 @foreach (i:n in arr) {
   ...
 }
 ```
+
 #### conditions
+
 ```
 @if (condition) {
   <span>Yes!!</span>
@@ -105,13 +129,17 @@ var result = render(data);
 ```
 
 ### function definition add calling
+
 #### definition
+
 ```
 @func sayHello(name) {
   <span>Hello, <strong>@name</strong>!</span>
 }
 ```
+
 #### calling
+
 ```
 @use sayHello('jim')
 
@@ -119,28 +147,37 @@ var result = render(data);
   @use sayHello(person.name)
 }
 ```
+
 in functions you can enjoy closure variables just like what you have in javascript
 
 ### block definition and overriding
+
 #### definition
+
 ```
 @block pageBody {
   <span>default empty page body</span>
 }
 ```
+
 #### overriding
+
 ```
 @override (pageBody) {
   <strong>this block is what will really show at block#pageBody</strong>
 }
 ```
+
 #### appending
+
 ```
 @append (pageBody) {
   <span>this will be appended to block#pageBody</span>
 }
 ```
+
 #### prepending
+
 ```
 @prepend (pageBody) {
   <span>this will be prepended to block#pageBody</span>
@@ -148,6 +185,7 @@ in functions you can enjoy closure variables just like what you have in javascri
 ```
 
 ### importing (experimental)
+
 ```
 @import ('_partials/header')
 @import (variable_is_ok)
@@ -159,16 +197,20 @@ in functions you can enjoy closure variables just like what you have in javascri
 ```
 
 ### layout and extending (experimental)
+
 ```
 @extend ('layout.html')
 @override (pageBody) {
   <strong>this block is what will really show at block#pageBody</strong>
 }
 ```
-not published yet
+
+`import` and `extend` only available when passing `filename` to `options` or or passing both `template` and `basedir`, because `import` and `extend` are using relative path.
 
 ### filter blocks
+
 register filters first
+
 ``` JavaScript
 raze.addFilter('textarea', function(str, width, height) {
   width = width || 200;
@@ -179,13 +221,17 @@ raze.addFilter('json', function(obj) {
   return JSON.stringify(obj, null, '  ');
 });
 ```
+
 and then you can use such filters and you can try 'filter block'
+
 ```
 @filter textarea(400, 200) {
   @(nested | json)
 }
 ```
+
 which will generate
+
 ```
 <textarea style="width:400px; height:200px;">
 {
@@ -210,16 +256,22 @@ which will generate
 ```
 
 ### miscellaneous
+
 #### escape chars
+
 ```
 @@ -> @
 @} -> }
 ```
+
 #### literal blocks
+
 ```
 @# everything in literal block will be echoed as plain text #@
 ```
+
 #### comments
+
 ```
 @* comments *@
 ```
@@ -230,7 +282,6 @@ which will generate
 var render = raze(opts);
 console.log(render.__renderFn.toString());
 ```
-
 
 ## benchmark (for fun)
 ```
@@ -257,6 +308,7 @@ raze unsafe
 ```
 
 ## inspired by
+
 * [aspnet/Razor](https://github.com/aspnet/Razor)
 * [magicdawn/razor-tmpl](https://github.com/magicdawn/razor-tmpl)
 * [aui/artTemplate](https://github.com/aui/artTemplate)
