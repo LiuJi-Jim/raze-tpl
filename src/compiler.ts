@@ -1,5 +1,3 @@
-/// <reference path="./global.d.ts" />
-
 import utils = require('./utils');
 import Parser = require('./parser');
 import engine = require('./engine');
@@ -11,16 +9,14 @@ export interface ICompiler {
 }
 
 function parseExpression(expr: string): string {
-  //console.log('parseExpression', expr);
-  var arr: string[] = []; // 管道拆分后的所有分段
-  var segment = '';
-  
-  for (var i = 0, len = expr.length; i < len; ++i) {
-    var curr = expr[i];
-    var next = (i < len - 1) ? expr[i + 1] : '';
+  // console.log('parseExpression', expr);
+  let arr: string[] = [];
+  let segment = '';
+  for (let i = 0, len = expr.length; i < len; ++i) {
+    let curr = expr[i];
+    let next = (i < len - 1) ? expr[i + 1] : '';
     if (curr === '|') {
       if (next !== '|') {
-        // 避免 || 运算符
         arr.push(segment);
         segment = '';
       } else {
@@ -32,25 +28,22 @@ function parseExpression(expr: string): string {
     }
   }
   if (segment !== '') {
-    // 最后一段
     arr.push(segment);
   }
-  var value = arr[0]; // 最左边的值
-  var pipes = arr.slice(1); // 管道段落
-  var result = value;
-  for (var i = 0; i < pipes.length; ++i) {
-    var curr = pipes[i].trim();
-    var fn = curr;
-    var open = curr.indexOf('(');
-    var args = [];
+  let value = arr[0];
+  let pipes = arr.slice(1);
+  let result = value;
+  for (let i = 0; i < pipes.length; ++i) {
+    let curr = pipes[i].trim();
+    let fn = curr;
+    let open = curr.indexOf('(');
+    let args = [];
     if (open > 0) {
-      // 有括号，是有参数的形式，如 xxx | replace(/a/ig, 'AAA')
-      var close = utils.findMatching(curr, open);
+      let close = utils.findMatching(curr, open);
       fn = curr.substring(0, open).trim();
-      // 对args进行一个规范化重新拼接，但似乎并没有什么卵用
       args = curr.substring(open + 1, close).split(',');
     }
-    var arg = args.length > 0 ? (', ' + args.join(', ')) : '';
+    let arg = args.length > 0 ? (', ' + args.join(', ')) : '';
     result = `__fs.${fn}(${result}${arg})`;
   }
   return result;
@@ -69,25 +62,56 @@ function pushCode(codes: string[], code: string, safe: boolean): void {
  * returns string[]
  * in case someone want to hook the code before new Function
  */
-function codegen(tokens: utils.IToken[], args: string[], identifiers: string[], opts: IRazeOptions): string[] {
-  var result = utils.nextGUID();
-  var codes = ['var ' + result + ' = "";'];
-  //codes.push(`console.log('data', typeof ${opts.local})`);
-  //codes.push(`console.log('obj', typeof __obj)`);
-  //codes.push(`console.log('engine', typeof __engine)`);
-  codes.push('var __hs=__engine.helpers,__fs=__engine.filters;');
-  for (var id in identifiers) {
-    if (args.indexOf(id) == -1) {
+export function codegen(cp: ICompiler, tpl: ITemplateObject, pure = false): string[] {
+  let tokens = cp.tokens;
+  let args = cp.args;
+  let opts = tpl.opts;
+  let identifiers = tpl.identifiers;
+  let result_varname = utils.nextGUID();
+  let codes = ['var ' + result_varname + ' = "";'];
+  // codes.push(`console.log('data', typeof ${opts.local})`);
+  // codes.push(`console.log('obj', typeof __obj)`);
+  // codes.push(`console.log('engine', typeof __engine)`);
+  if (!pure) {
+    codes.push('var __hs=__engine.helpers,__fs=__engine.filters;');
+  }
+  for (let id in identifiers) {
+    if (args.indexOf(id) === -1) {
       codes.push(`var ${id} = ${opts.local}["${id}"];`);
     }
   }
-  for (var i = 0; i < tokens.length; ++i) {
-    var token = tokens[i];
-    var data = token.val;
 
+  ['blocks', 'funcs'].forEach(function(type) {
+    let map = tpl[type];
+    for (let name in map) {
+      let frag: ITemplateObject = map[name];
+      let body = codegen(frag.code, frag, true);
+      let code = wrap(name, frag.opts.args, body);
+      pushCode(codes, code, false);
+    }
+  });
+  ['appends', 'prepends'].forEach(function(type) {
+    let map = tpl[type];
+    for (var name in map) {
+      let arr = map[name];
+      arr.forEach(function(frag) {
+        let fn = `${name}_${type}${utils.nextGUID()}`;
+        let body = codegen(frag.code, frag, true);
+        let code = wrap(fn, frag.opts.args, body);
+        frag.funcname = fn;
+        frag.funcstr = code;
+        pushCode(codes, code, false);
+      });
+    }
+  });
+
+  for (let i = 0; i < tokens.length; ++i) {
+    let token = tokens[i];
+    let data = token.val;
+    let inner: string;
     switch (token.type) {
       case utils.TokenType.COMMAND:
-        var inner = `${result} += (${data});`
+        inner = `${result_varname} += (${data});`;
         pushCode(codes, inner, opts.safe);
         break;
       case utils.TokenType.CODE_BLOCK:
@@ -96,18 +120,31 @@ function codegen(tokens: utils.IToken[], args: string[], identifiers: string[], 
          */
         pushCode(codes, data, false);
         break;
+      case utils.TokenType.BLOCK:
+        let name = data;
+        let prepends = tpl.prepends[name] || [];
+        prepends.forEach(function(frag) {
+          pushCode(codes, `${result_varname} += (${frag.funcname}());`, false);
+        });
+        inner = `${result_varname} += (${name}());`;
+        pushCode(codes, inner, false);
+        let appends = tpl.appends[name] || [];
+        appends.forEach(function(frag) {
+          pushCode(codes, `${result_varname} += (${frag.funcname}());`, false);
+        });
+        break;
       case utils.TokenType.VAR:
         /**
          * @(data)
          * 不允许空值,就是值不存在的情况下会报错
          */
         data = parseExpression(data);
-        var inner = `${result} += __fs.html(${data});`;
+        inner = `${result_varname} += __fs.html(${data});`;
         pushCode(codes, inner, opts.safe);
         break;
       case utils.TokenType.VAR_RAW:
         data = parseExpression(data);
-        var inner = `${result} += ${data};`;
+        inner = `${result_varname} += ${data};`;
         pushCode(codes, inner, opts.safe);
         break;
       case utils.TokenType.STRING:
@@ -116,79 +153,78 @@ function codegen(tokens: utils.IToken[], args: string[], identifiers: string[], 
          * "div" -> result+='\"div\"';
          */
         data = utils.escapeInNewFunction(data);
-        var inner = `${result} += '${data}';`;
+        inner = `${result_varname} += '${data}';`;
         pushCode(codes, inner, false);
         break;
       default:
         break;
     }
   }
-  codes.push('return ' + result);
+  codes.push(`return ${result_varname};`);
   return codes;
 }
 
-function link(fn: ICompiler, obj: ITemplateObject, opts: IRazeOptions): Function {
-  var tokens = fn.tokens;
-  var args = fn.args.slice(0);
-  var code = codegen(tokens, args, obj.identifiers, opts).join('\n');
-
-  args.push(code);
-  return Function.apply(this, args);
+/**
+ * wrap a compiled tpl into JavaScript Function source code
+ */
+export function wrap(name: string, args: string[], body: string[]): string {
+  let codes = [`function ${name}(${args.join(",") }){`];
+  codes = codes.concat(body);
+  codes.push('}');
+  return codes.join('\n');
 }
 
-export function parse(input: string, obj: ITemplateObject, opts: IRazeOptions): ICompiler {
-  var parser = new Parser(input, obj, opts);
-  var tokens = parser.parse();
+/**
+ * link a compiled tpl to JavaScript Function
+ */
+export function link(cp: ICompiler, tpl: ITemplateObject): Function {
+  if (tpl.layout) {
+    utils.extend(tpl.layout.appends, tpl.appends);
+    utils.extend(tpl.layout.prepends, tpl.prepends);
+    utils.extend(tpl.layout.blocks, tpl.blocks);
+    utils.extend(tpl.layout.funcs, tpl.funcs);
+    utils.extend(tpl.layout.identifiers, tpl.identifiers);
 
-  var args: string[] = [];
+    return link(tpl.layout.code, tpl.layout);
+  }
+
+  let body = codegen(cp, tpl).join('\n');
+  let args = cp.args.slice(0);
+  args.push(body);
+
+  let render = Function.apply(undefined, args);
+
+  let fn: IRenderFunc = function(data: any): string {
+    return render(data, tpl, engine);
+  };
+
+  fn.__renderFn = render;
+
+  return fn;
+}
+
+/**
+ * compile to function
+ */
+export function compile(tpl: ITemplateObject, pure = false): ICompiler {
+  let input = tpl.source;
+  let opts = tpl.opts;
+  let parser = new Parser(input, tpl, opts);
+  let tokens = parser.parse();
+
+  let args: string[] = [];
   if (opts.args.length > 0) {
     args = opts.args.slice(0);
   }
-  args.push(opts.local);
-  args.push('__obj');
-  args.push('__engine');
+  if (!pure) {
+    args.push(opts.local);
+    args.push('__obj');
+    args.push('__engine');
+  }
 
   return {
     args: args,
     tokens: tokens,
     opts: opts
   };
-}
-
-/**
- * compile to function
- */
-export function compile(input: string, obj: ITemplateObject, opts: IRazeOptions): RenderFunc {
-  var code = parse(input, obj, opts);
-
-  for (var name in obj.blocks) {
-    var block = obj.blocks[name];
-    obj.blocks[name] = link(block, obj, block.opts);
-  }
-  for (var name in obj.funcs) {
-    var func = obj.funcs[name];
-    obj.funcs[name] = link(func, obj, func.opts);
-  }
-
-  var list = [obj.appends, obj.prepends];
-  for (var i = 0; i < list.length; ++i) {
-    var fns = list[i];
-    for (var name in fns) {
-      var arr = fns[name];
-      for (var j = 0; j < arr.length; ++j) {
-        arr[j] = link(arr[j], obj, opts);
-      }
-    }
-  }
-
-  var localFn = link(code, obj, opts);
-
-  var fn: RenderFunc = function(data: any): string {
-    return localFn(data, obj, engine);
-  };
-
-  fn.__renderFn = localFn;
-  fn.__template = obj;
-
-  return fn;
 }

@@ -1,0 +1,12 @@
+.DS_Store
+desktop.ini
+.gitignore
+.editorconfig
+tsconfig.json
+tsd.json
+tslint.json
+/src
+/test
+/typings
+/tpls
+/tmp

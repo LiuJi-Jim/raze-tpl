@@ -1,3 +1,6 @@
-/lib/
-node_modules
-*.out.html
+.DS_Store
+desktop.ini
+/node_modules
+/dist
+/tmp
+/typings

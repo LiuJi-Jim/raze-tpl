@@ -2,8 +2,11 @@
 A js template engine with syntax like [Microsoft Razor Render Engine](https://github.com/aspnet/Razor)
 
 ## how to use
-### build
-`make`
+
+### install
+```
+npm install raze-tpl
+```
 
 ### use
 ```
@@ -11,15 +14,27 @@ var raze = require('./index');
 
 var tpl = fs.readFileSync(filename, 'utf-8');
 
-var render = raze(tpl, {
-  safe: false // true to add try/catch to variables accessing
+var render = raze({
+  template: tpl
 });
 
-var html = render(data);
+// or
+var render = raze({
+  filename: filename
+});
+
+var result = render(data);
 ```
 
-## test and see the demo of syntax/features
-* `node test.js`
+### options
+
+`safe`: `true` to add try/catch to variables accessing (default to `true`)
+`strip`: `true` to remove whitespace (default to `false`)
+`extname`: define extname when using `import` and `extend` (default to `'.html'`)
+`plainObjEach`: `true` to use `Object.keys()` when loop on K-V objects (default to `true`)
+
+### test and see the demo of syntax/features
+* `node test/test.js`
 * see `tpls/template.html` and `tpls/template.out.html`
 
 ## syntax and features
@@ -52,14 +67,20 @@ var html = render(data);
   <li>No.@index of arr is @value</li>
 }
 ```
-#### loop on kv-obj
+#### also available on k-v objects
 ```
-@objEach (value in kv) {
+@each (value in kv) {
   <li>@value</li>
 }
-@objEach (k:v in kv) {
+@each (k:v in kv) {
   <dt>@k</dt>
   <dd>@v</dd>
+}
+```
+### alias foreach = each
+```
+@foreach (i:n in arr) {
+  ...
 }
 ```
 #### conditions
@@ -126,6 +147,17 @@ in functions you can enjoy closure variables just like what you have in javascri
 }
 ```
 
+### importing (experimental)
+```
+@import ('_partials/header')
+@import (variable_is_ok)
+@import ('_components/card', {
+  title: 'params is available',
+  content: local_var,
+  footer: scope_will_be_extended
+})
+```
+
 ### layout and extending (experimental)
 ```
 @extend ('layout.html')
@@ -177,8 +209,6 @@ which will generate
 </textarea>
 ```
 
-
-
 ### miscellaneous
 #### escape chars
 ```
@@ -194,27 +224,36 @@ which will generate
 @* comments *@
 ```
 
+## trouble shooting
+
+```
+var render = raze(opts);
+console.log(render.__renderFn.toString());
+```
+
+
 ## benchmark (for fun)
 ```
 etpl
-2000 tests in 4649.02ms.
-430.20op/s.
-2.3245ms/op.
+2000 tests in 3767.63ms.
+530.84op/s.
+1.8838ms/op.
 -----------
 art-template
-2000 tests in 4054.16ms.
-493.32op/s.
-2.0271ms/op.
+2000 tests in 3634.60ms.
+550.27op/s.
+1.8173ms/op.
 -----------
 raze safe
-2000 tests in 4326.85ms.
-462.23op/s.
-2.1634ms/op.
+2000 tests in 3643.93ms.
+548.86op/s.
+1.8220ms/op.
 -----------
 raze unsafe
-2000 tests in 3840.70ms.
-520.74op/s.
-1.9203ms/op.
+2000 tests in 3259.28ms.
+613.63op/s.
+1.6296ms/op.
+-----------
 ```
 
 ## inspired by

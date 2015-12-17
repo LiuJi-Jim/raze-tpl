@@ -4,4 +4,4 @@ import filters = require('./filters');
 export = {
   helpers: helpers,
   filters: filters
-}
+};

@@ -1,9 +1,6 @@
-/// <reference path="./global.d.ts" />
-
 import utils = require('./utils');
-import Compiler = require('./compiler');
 
-var KEYWORDS =
+let KEYWORDS =
   // 关键字
   'break,case,catch,continue,debugger,default,delete,do,else,false'
   + ',finally,for,function,if,in,instanceof,new,null,return,switch,this'
@@ -15,17 +12,29 @@ var KEYWORDS =
   + ',package,private,protected,public,short,static,super,synchronized'
   + ',throws,transient,volatile'
 
+  // 内置对象
+  + ',Object,Date,Math,String,Number,Array,Boolean,Function,RegExp,JSON,Promise'
+  + ',NaN,Infinity,console'
+
+  // 内置函数
+  + ',eval,parseInt,parseFloat,isNaN,isFinite,decodeURI,decodeURIComponent'
+  + ',encodeURI,encodeURIComponent,'
+
   // ECMA 5 - use strict
   + ',arguments,let,yield'
 
+  // ES 2015
+  + ',Map,Set,WeakMap,WeakSet,Symbol'
+
   + ',undefined';
-var REMOVE_RE = /\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|"(?:[^"\\]|\\[\w\W])*"|'(?:[^'\\]|\\[\w\W])*'|\s*\.\s*[$\w\.]+/g;
-var SPLIT_RE = /[^\w$]+/g;
-var KEYWORDS_RE = new RegExp(["\\b" + KEYWORDS.replace(/,/g, '\\b|\\b') + "\\b"].join('|'), 'g');
-var NUMBER_RE = /^\d[^,]*|,\d[^,]*/g;
-var BOUNDARY_RE = /^,+|,+$/g;
-var SPLIT2_RE = /^$|,+/;
-var RE_EMAIL = (/^[a-zA-Z0-9.%]+@[a-zA-Z0-9.\-]+\.(?:ca|co\.uk|com|edu|net|org)\b/);
+
+let REMOVE_RE = /\/\*[\w\W]*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|"(?:[^"\\]|\\[\w\W])*"|'(?:[^'\\]|\\[\w\W])*'|\s*\.\s*[$\w\.]+/g;
+let SPLIT_RE = /[^\w$]+/g;
+let KEYWORDS_RE = new RegExp(["\\b" + KEYWORDS.replace(/,/g, '\\b|\\b') + "\\b"].join('|'), 'g');
+let NUMBER_RE = /^\d[^,]*|,\d[^,]*/g;
+let BOUNDARY_RE = /^,+|,+$/g;
+let SPLIT2_RE = /^$|,+/;
+let RE_EMAIL = (/^[a-zA-Z0-9.%]+@[a-zA-Z0-9.\-]+\.(?:ca|co\.uk|com|edu|net|org)\b/);
 
 function getIdentifiers(code: string): string[] {
   if (!code) {
@@ -40,6 +49,21 @@ function getIdentifiers(code: string): string[] {
     .split(SPLIT2_RE);
 }
 
+
+function parseArgs(args: string): string[] {
+  args = args.trim();
+  let result: string[] = [];
+  if (args !== '') {
+    result = args.split(',');
+    for (let i = 0; i < result.length; ++i) {
+      result[i] = result[i].trim();
+    }
+  } else {
+    result = [];
+  }
+  return result;
+}
+
 /**
  * Parser
  */
@@ -47,36 +71,44 @@ class Parser {
   input: string;
   consumed: number = -1;
   tokens: utils.IToken[] = [];
-  obj: ITemplateObject;
+  tpl: ITemplateObject;
   opts: IRazeOptions;
 
-  constructor(input: string, obj: ITemplateObject, opts: IRazeOptions) {
+  constructor(input: string, tpl: ITemplateObject, opts: IRazeOptions) {
     this.input = input.replace(/^\uFEFF/, '').replace(/\r\n|\r/g, '\n'); // normalize
-    this.obj = obj;
+    this.tpl = tpl;
     this.opts = opts;
   }
 
   static parse(input: string, obj: ITemplateObject, opts: IRazeOptions): any[] {
-    var parser = new Parser(input, obj, opts);
+    let parser = new Parser(input, obj, opts);
     return parser.parse();
   }
 
   scanIdentifiers(code: string): void {
-    var arr = getIdentifiers(code);
-    for (var i = 0; i < arr.length; ++i) {
-      var id = arr[i];
+    let arr = getIdentifiers(code);
+    for (let i = 0; i < arr.length; ++i) {
+      let id = arr[i];
       if (id.length > 2 && id.charAt(0) === '_' && id.charAt(1) === '_') {
         continue;
       }
-      this.obj.identifiers[id] = true;
+      this.tpl.identifiers[id] = true;
     }
   }
-  
+
+  parseFragment(body: string, opts: IRazeOptions): ITemplateObject {
+    // let fn = Compiler.parse(body, this.obj, opts, true);
+    // let code = Compiler.codegen(fn.tokens, fn.args, {}, fn.opts, true);
+    // let fnstr = Compiler.wrap(name, fn.args, code);
+    let fragment = this.tpl.fragment(body, opts);
+    return fragment;
+  }
+
   /**
    * make a new Token(type,val)
    */
   tok(type: utils.TokenType, val: string): void {
-    //console.log('tok', type, val);
+    // console.log('tok', type, val);
     val = utils.escapeLiteralBlock(val);
     this.tokens.push({
       type: type,
@@ -85,17 +117,19 @@ class Parser {
   }
 
   parse(): utils.IToken[] {
-    for (var index = 0; index < this.input.length; index++) {
-      var cur = this.input.charAt(index);
-      var next = '';
-      var matchEmail = RE_EMAIL.exec(this.input.substring(index));
+    for (let index = 0; index < this.input.length; index++) {
+      let cur = this.input.charAt(index);
+      let next = '';
+      let matchEmail = RE_EMAIL.exec(this.input.substring(index));
       if (matchEmail) {
         // email 不完美
         index += matchEmail[0].length;
         continue;
       }
-
-      if (cur == '@') {
+      if (cur === '\n' && this.opts.strip) {
+        this.handleString(index);
+      }
+      if (cur === '@') {
         // '@'
         // handle string before handle symbol @xxx
         this.handleString(index);
@@ -115,9 +149,9 @@ class Parser {
           index = this.handleLiteralBlock(index + 1);
           continue;
         } else {
-          var tokenIndex = index + 1;
-          //@ if ( name == 'zhangsan' )
-          while (next == ' ') {
+          let tokenIndex = index + 1;
+          // @ if ( name == 'zhangsan' )
+          while (next === ' ') {
             tokenIndex++;
             next = this.input[tokenIndex];
           }
@@ -130,9 +164,9 @@ class Parser {
               index = this.handleExplicitVariable(index, tokenIndex);
               continue;
             default: // 可能有@if @for @while等
-              var remain = this.input.substring(tokenIndex);
+              let remain = this.input.substring(tokenIndex);
               // each - for/while/if/else - 普通 @...{}
-              if (/^(foreach|each|objEach)\s*\([\s\S]*\)\s*\{/.test(remain)) {
+              if (/^(foreach|each)\s*\([\s\S]*\)\s*\{/.test(remain)) {
                 // @each/foreach
                 index = this.handleEach(index, tokenIndex);
                 continue;
@@ -143,15 +177,15 @@ class Parser {
                 // @ for/while {}
                 index = this.handleControlFlow(index, tokenIndex);
                 continue;
-              } else if (/^(func|use|block|override|append|prepend|filter)\s*([\w_$]+)?\s*\([\s\S]*\)/.test(remain)) {
-                index = this.handleCommand(index, tokenIndex)
+              } else if (/^(extend|func|use|block|override|append|prepend|filter|import)\s*([\w_$]+)?\s*\([\s\S]*\)/.test(remain)) {
+                index = this.handleCommand(index, tokenIndex);
                 continue;
               }
               break;
           }
 
           // 防止@each 等 被识别为 implicitVariable, 放在后面
-          var match = /^(-)?([\w._[\]]+)/.exec(this.input.substring(index + 1));
+          let match = /^(-)?([\w._[\]]+)/.exec(this.input.substring(index + 1));
           if (match && match[0]) {
             // @locals.name
             index = this.handleImplicitVariable(index, match[0]);
@@ -167,58 +201,69 @@ class Parser {
 
     return this.tokens;
   }
-  
+
   /*----------------------------------------------------*
    * handleType                                         *
    *                                                    *
-   * i -> @                                             *
+   * leading_index -> @                                             *
    * returns the  `index` in Parser#parse should be     *
    * after current handle operation                     *
    *----------------------------------------------------*/
-   
+
   /**
    * normal string
-   *
-   * i -> @
+   * leading_index -> @
    */
-  handleString(i: number): void {
-    var content = this.input.substring(this.consumed + 1, i);
+  handleString(leading_index: number): number {
+    let content = this.input.substring(this.consumed + 1, leading_index);
+    if (this.opts.strip) {
+      content = content.replace(/^\n[\x20\t\r\n]*/, '');
+    }
     if (content) {
       this.tok(utils.TokenType.STRING, content);
     }
-    this.consumed = i - 1;
+    this.consumed = leading_index - 1;
+    return this.consumed;
   }
 
-  handleComment(i: number): number {
+  /**
+   * comment
+   * leading_index -> @
+   */
+  handleComment(leading_index: number): number {
     // @* comment *@
-    var remain = this.input.substr(i);
-    var star_index = remain.indexOf('*@');
+    let remain = this.input.substr(leading_index);
+    let star_index = remain.indexOf('*@');
 
     if (star_index > -1) {
       // *@ exists
-      var commentEnd = star_index + 1 + i;
+      let commentEnd = star_index + 1 + leading_index;
       return this.consumed = commentEnd;
     } else {
       // no *@ found
       // just ignore it , treat @* as normal string
-      return i;
+      return leading_index;
 
       // throw error
-      // var before = this.input.substring(0, i + 2); // start...@*
-      // var line = before.split('\n').length + 1;
-      // var chr = (i + 2) - before.split('\n').reduce(function(sum, line) {
+      // let before = this.input.substring(0, i + 2); // start...@*
+      // let line = before.split('\n').length + 1;
+      // let chr = (i + 2) - before.split('\n').reduce(function(sum, line) {
       //   return sum += line.length; // '\r\n'.length = 2
       // }, 0);
-      // var msg = utils.format("line : {0},column : {1} no comment-end(*{3}) found",
+      // let msg = utils.format("line : {0},column : {1} no comment-end(*{3}) found",
       //   line, chr, this.symbol);
       // throw new Error(msg);
     }
   }
 
-  handleLiteralBlock(i: number): number {
-    var closing_index = utils.parseLiteralBlock(this.input, i);
+  /**
+   * literal
+   * leading_index -> @
+   */
+  handleLiteralBlock(leading_index: number): number {
+    let closing_index = utils.parseLiteralBlock(this.input, leading_index);
     if (closing_index >= 0) {
-      var literal = this.input.substring(i + 1, closing_index - 1);
+      let literal = this.input.substring(leading_index + 1, closing_index - 1);
       this.tok(utils.TokenType.STRING, literal);
       return this.consumed = closing_index;
     } else {
@@ -226,22 +271,25 @@ class Parser {
     }
   }
 
-  handleEscapeSymbol(i: number): number {
+  /**
+   * escape chars
+   * leading_index -> @
+   */
+  handleEscapeSymbol(leading_index: number): number {
     // @@ i i+1
-    var ch = this.input.charAt(i + 1);
+    let ch = this.input.charAt(leading_index + 1);
     this.tok(utils.TokenType.STRING, ch);
-    return this.consumed = i + 1;
+    return this.consumed = leading_index + 1;
   }
-  
+
   /**
    * @{ ... } code block
-   *
-   * i -> @
-   * fi -> {
+   * leading_index -> @
+   * start_brace -> {
    */
-  handleCodeBlock(i: number, fi: number): number {
-    var sec = utils.findMatching(this.input, fi);
-    var content = this.input.substring(fi + 1, sec);
+  handleCodeBlock(leading_index: number, start_brace: number): number {
+    let end_brace = utils.findMatching(this.input, start_brace);
+    let content = this.input.substring(start_brace + 1, end_brace);
     content = content.trim();
 
     this.scanIdentifiers(content);
@@ -250,23 +298,22 @@ class Parser {
       this.tok(utils.TokenType.CODE_BLOCK, content);
     }
 
-    return this.consumed = sec;
+    return this.consumed = end_brace;
   }
-  
+
   /**
    * explicit variable @(var)
-   *
-   * i -> '@'
-   * fi -> (
+   * leading_index -> '@'
+   * start_parenthesis -> (
    */
-  handleExplicitVariable(i: number, fi: number): number {
+  handleExplicitVariable(leading_index: number, start_parenthesis: number): number {
     // razor-tmpl not only used for generating html
     // so default not escape html
     // use @(- ) to escape
 
-    var sec = utils.findMatching(this.input, fi); // sec -> )
-    var content = this.input.substring(fi + 1, sec);
-    var tk = utils.TokenType.VAR;
+    let end_parenthesis = utils.findMatching(this.input, start_parenthesis); // sec -> )
+    let content = this.input.substring(start_parenthesis + 1, end_parenthesis);
+    let tk = utils.TokenType.VAR;
 
     if (content) {
       // content = utils.unescape(content); //like @( p.age &gt;= 10)
@@ -285,161 +332,184 @@ class Parser {
       // @(data)
       this.tok(tk, content);
     }
-    return this.consumed = sec;
+    return this.consumed = end_parenthesis;
   }
-  
+
   /**
    * @name implicit variable
-   *
-   * i -> @
+   * leading_index -> @
    * variable -> name
    */
-  handleImplicitVariable(i: number, variable: string): number {
-    var tk = utils.TokenType.VAR;
+  handleImplicitVariable(leading_index: number, variable: string): number {
+    let tk = utils.TokenType.VAR;
     if (variable[0] === '-') {
       variable = variable.substring(1);
       tk = utils.TokenType.VAR_RAW;
     }
     this.scanIdentifiers(variable);
     this.tok(tk, variable);
-    return this.consumed = i + variable.length;
+    return this.consumed = leading_index + variable.length;
   }
-  
+
+  arrayEach(index_varname, iter_varname, items_varname, inner_tokens) {
+    var loop_head: string[] = [];
+    var loop_foot: string[] = ['}'];
+    var length_varname = utils.nextGUID();
+
+    loop_head.push(`if(__hs.isArray(${items_varname})){`);
+    loop_head.push(`for(var ${index_varname}=0,${length_varname}=${items_varname}.length;${index_varname}<${length_varname};++${index_varname}){`);
+    loop_head.push(`var ${iter_varname}=${items_varname}[${index_varname}];`);
+    loop_foot.push('}');
+
+    this.tok(utils.TokenType.CODE_BLOCK, loop_head.join('\n'));
+    this.tokens = this.tokens.concat(inner_tokens);
+    this.tok(utils.TokenType.CODE_BLOCK, loop_foot.join('\n'));
+  }
+
+  objEach(index_varname, iter_varname, items_varname, inner_tokens) {
+    var loop_head: string[] = [];
+    var loop_foot: string[] = ['}'];
+    loop_head.push(`if(__hs.isObject(${items_varname})){`);
+    if (this.opts.plainObjEach) {
+      let keys_array_varname = utils.nextGUID();
+      let keys_index_varname = utils.nextGUID();
+      let keys_length_varname = utils.nextGUID();
+      loop_head.push(`var ${keys_array_varname}=Object.keys(${items_varname});`);
+      loop_head.push(`for(var ${keys_index_varname}=0,${keys_length_varname}=${keys_array_varname}.length;${keys_index_varname}<${keys_length_varname};++${keys_index_varname}){`);
+      loop_head.push(`var ${index_varname}=${keys_array_varname}[${keys_index_varname}];`);
+      loop_head.push(`var ${iter_varname}=${items_varname}[${index_varname}];`);
+    } else {
+      loop_head.push(`for(var ${index_varname} in ${items_varname}){`);
+      loop_head.push(`var ${iter_varname}=${items_varname}[${index_varname}];`);
+    }
+    loop_foot.push('}');
+
+    this.tok(utils.TokenType.CODE_BLOCK, loop_head.join('\n'));
+    this.tokens = this.tokens.concat(inner_tokens);
+    this.tok(utils.TokenType.CODE_BLOCK, loop_foot.join('\n'));
+  }
+
   /**
    * @each(item in items) {
    *   <div>@item.name</div>
    * }
-   *
-   * i -> @
-   * fi -> e , each's first letter
+   * leading_index -> @
+   * each_index -> e , each's first letter
    */
-  handleEach(i: number, fi: number): number {
+  handleEach(leading_index: number, each_index: number): number {
     // '(' ')'
-    var remain = this.input.substring(i); // @xxxxx
-    var fi_small = remain.indexOf('(') + i;
-    var sec_small = utils.findMatching(this.input, fi_small);
-
-    var loop_type = this.input.substring(i + 1, fi_small).trim();
+    let remain = this.input.substring(leading_index); // @xxxxx
+    let start_parenthesis = remain.indexOf('(') + leading_index;
+    let end_parenthesis = utils.findMatching(this.input, start_parenthesis);
 
     // '{' '}'
-    remain = this.input.substring(sec_small);
-    var fi_big = remain.indexOf('{') + sec_small;
-    var sec_big = utils.findMatching(this.input, fi_big);
+    remain = this.input.substring(end_parenthesis);
+    let start_brace = remain.indexOf('{') + end_parenthesis;
+    let end_brace = utils.findMatching(this.input, start_brace);
 
     // 1.for(var i in items){ item = items[i];
-    var loop = this.input.substring(fi_small + 1, sec_small); //item in items
-    var inIndex = loop.indexOf('in');
-    var item = loop.substring(0, inIndex).trim()
-    var items = loop.substring(inIndex + 2).trim();
-    this.scanIdentifiers(items);
+    let loop = this.input.substring(start_parenthesis + 1, end_parenthesis); // item in items
+    let inSplit = ' in ';
+    let inIndex = loop.indexOf(inSplit);
+    let item = loop.substring(0, inIndex).trim();
+    let items_varname = loop.substring(inIndex + inSplit.length).trim();
+    this.scanIdentifiers(items_varname);
 
-    var index, iter;
+    let index_varname, iter_varname;
     if (item.indexOf(':') >= 0) {
-      var pair = item.split(':');
-      index = pair[0].trim();
-      iter = pair[1].trim();
+      let pair = item.split(':');
+      index_varname = pair[0].trim();
+      iter_varname = pair[1].trim();
     } else {
-      index = utils.nextGUID();
-      iter = item;
+      index_varname = utils.nextGUID();
+      iter_varname = item;
     }
-    var length = utils.nextGUID();
 
-    var loop_head: string;
-    if (loop_type === 'objEach') {
-      var keys = utils.nextGUID();
-      var $i = utils.nextGUID();
-      loop_head = `if (__hs.isObject(${items})) for(var ${index} in ${items}){var ${iter}=${items}[${index}];`;
-      //loop_head = `if (__hs.isObject(${items})){ var ${keys}=Object.getOwnPropertyNames(${items}); for(var ${$i}=0,${length}=${keys}.length;${$i}<${length};++${$i}){var ${index}=${keys}[${$i}], ${iter}=${items}[${index}];`;
-    } else {
-      loop_head = `if (__hs.isArray(${items})){ for(var ${index}=0,${length}=${items}.length;${index}<${length};++${index}){var ${iter}=${items}[${index}];`;
-    }
-    this.tok(utils.TokenType.CODE_BLOCK, loop_head);
+    let loop_body = this.input.substring(start_brace + 1, end_brace).trim() + '\n';
+    let inner_tokens = Parser.parse(loop_body, this.tpl, this.opts);
 
-    // 2.循环体
-    // { <div>@(data)</div> }
-    var loop_body = this.input.substring(fi_big + 1, sec_big).trim() + '\n';
-    var inner_tokens = Parser.parse(loop_body, this.obj, this.opts);
-    this.tokens = this.tokens.concat(inner_tokens);
+    this.objEach(index_varname, iter_varname, items_varname, inner_tokens);
+    this.arrayEach(index_varname, iter_varname, items_varname, inner_tokens);
 
-    // 3.}
-    this.tok(utils.TokenType.CODE_BLOCK, '}}');
-
-    return this.consumed = sec_big;
+    return this.consumed = end_brace;
   }
-  
+
   /**
    * @if(condition){ ... }
-   *
-   * i -> @
-   * fi -> if's first letter `i`
+   * leading_index -> @
+   * if_index -> if's first letter `i`
    */
-  handleIfElse(i: number, fi: number): number {
+  handleIfElse(leading_index: number, if_index: number): number {
     // lastRightIndex : 上一个block 结尾的右大括号 index
     // if(){ } <- lastRightIndex
-    var lastRightIndex: number;
-    var remain: string;
+    let lastRightIndex: number;
+    let remain: string;
 
     do {
-      lastRightIndex = this.handleControlFlow(i, fi);
+      lastRightIndex = this.handleControlFlow(leading_index, if_index);
       // see whether `else [if]` exists
       remain = this.input.substring(lastRightIndex + 1);
       // decide else's e index
-      fi = remain.indexOf('else') + lastRightIndex + 1;
+      if_index = remain.indexOf('else') + lastRightIndex + 1;
     } while (/^\s*else/.test(remain));
 
     return this.consumed = lastRightIndex;
   }
-  
+
   /**
    * handle @for/while control flow
-   *
    * _ -> @ , not important
-   * fi -> [for,while]'s first letter
+   * loop_index -> [for,while]'s first letter
    */
-  handleControlFlow(_: any, fi: number): number {
-    var remain = this.input.substring(fi);
-    var fi_big = remain.indexOf('{') + fi;
-    var sec_big = utils.findMatching(this.input, fi_big);
+  handleControlFlow(_: any, loop_index: number): number {
+    let remain = this.input.substring(loop_index);
+    let start_brace = remain.indexOf('{') + loop_index;
+    let end_brace = utils.findMatching(this.input, start_brace);
 
-    var part1 = this.input.substring(fi, fi_big + 1); // for(xxx){
-    var part2 = this.input.substring(fi_big + 1, sec_big); // <div>@(data)</div>
-    var part3 = '}'; // }
+    let part1 = this.input.substring(loop_index, start_brace + 1); // for(xxx){
+    let part2 = this.input.substring(start_brace + 1, end_brace); // <div>@(data)</div>
+    let part3 = '}'; // }
 
     this.scanIdentifiers(part1);
     // 1.part1
     this.tok(utils.TokenType.CODE_BLOCK, part1);
 
     // 2.part2
-    part2 = part2.trim(); // + '\n';
-    var inner_tokens = Parser.parse(part2, this.obj, this.opts);
+    // part2 = part2.trim(); // + '\n';
+    let inner_tokens = Parser.parse(part2, this.tpl, this.opts);
     this.tokens = this.tokens.concat(inner_tokens);
 
     // 3.part3
     this.tok(utils.TokenType.CODE_BLOCK, part3);
 
-    return this.consumed = sec_big;
+    return this.consumed = end_brace;
   }
 
-  handleCommand(i: number, fi: number): number {
+  /**
+   * @xxxxx (other commands)
+   * leading_index -> @
+   * cmd_index -> xxxxx's first letter
+   */
+  handleCommand(leading_index: number, cmd_index: number): number {
     // '(' ')'
-    var remain = this.input.substring(i); // @xxxxx
-    var fi_small = remain.indexOf('(') + i;
-    var sec_small = utils.findMatching(this.input, fi_small);
+    let remain = this.input.substring(leading_index); // @xxxxx
+    let start_parenthesis = remain.indexOf('(') + leading_index;
+    let end_parenthesis = utils.findMatching(this.input, start_parenthesis);
 
-    var part1 = this.input.substring(i + 1, fi_small).trim().split(' ');
-    var command = part1[0].trim();
-    var name = (part1[1] || '').trim();
+    let part1 = this.input.substring(leading_index + 1, start_parenthesis).trim().split(' ');
+    let command = part1[0].trim();
+    let name = (part1[1] || '').trim();
 
     // 1.@COMMAND (args) {
-    var args = this.input.substring(fi_small + 1, sec_small).trim();
-    var body: string;
-    var end = sec_small;
+    let args = this.input.substring(start_parenthesis + 1, end_parenthesis).trim();
+    let body: string;
+    let end = end_parenthesis;
 
     if ('block override append prepend func filter'.indexOf(command) >= 0) {
       // '{' '}'
-      remain = this.input.substring(sec_small);
-      var fi_big = remain.indexOf('{') + sec_small;
-      var sec_big = utils.findMatching(this.input, fi_big);
+      remain = this.input.substring(end_parenthesis);
+      let fi_big = remain.indexOf('{') + end_parenthesis;
+      let sec_big = utils.findMatching(this.input, fi_big);
 
       // 2.body
       // { <div>@(data)</div> }
@@ -453,87 +523,149 @@ class Parser {
     return this.consumed = end;
   }
 
-  func(args, body, name) {
-    this.scanIdentifiers(args);
-    var obj = this.obj;
-    var opts = utils.extend({}, this.opts);
-    opts.local = utils.nextGUID();
-    args = args.trim();
-    if (args !== '') {
-      args = args.split(',');
-      for (var i = 0; i < args.length; ++i) {
-        args[i] = args[i].trim();
-      }
-      opts.args = args;
+  /**
+   * @import(filename[, args = {}])
+   */
+  import(args) {
+    debugger;
+    let comma = args.indexOf(',');
+    let name;
+    if (comma > 0) {
+      name = args.substr(0, comma).trim();
+      args = args.substr(comma + 1).trim();
+    } else {
+      name = args.trim();
+      args = '{}';
     }
-    var fn = Compiler.parse(body, obj, opts);
-    obj.funcs[name] = fn;
+    this.scanIdentifiers(name);
+    this.scanIdentifiers(args);
+    // console.log('dynamicImport', name, args);
+    let cmd = `__obj.import(${name}, __hs.extend({},${this.opts.local},${args}))`;
+
+    // console.log(cmd)
+    this.tok(utils.TokenType.COMMAND, cmd);
   }
 
+  /**
+   * @extend(filename)
+   */
+  extend(filename) {
+    this.tpl.extend(filename);
+  }
+
+  /**
+   * @func name(args) {
+   *   body
+   * }
+   */
+  func(args, body, name) {
+    let opts = utils.extend({}, this.opts);
+    opts.args = parseArgs(args);
+
+    name = `__fn_${name}`;
+    let frag = this.parseFragment(body, opts);
+
+    this.tpl.funcs[name] = frag;
+  }
+
+  /**
+   * @use name(args)
+   */
   use(args, _, name) {
     this.scanIdentifiers(args);
-    args = args.trim();
-    var arr = [];
-    if (args) {
-      arr.push(args);
-    }
-    arr.push(this.opts.local);
-    arr.push('__obj');
-    arr.push('__engine');
-
-    var arg = arr.join(',');
+    args = parseArgs(args);
+    name = `__fn_${name}`;
+    let arg = args.join(',');
     this.tok(
       utils.TokenType.COMMAND,
-      `__obj.funcs["${name}"](${arg})`
-      );
+      `${name}(${arg})`
+    );
   }
 
+  /**
+   * @block (name) {
+   *   body
+   * }
+   */
   block(name, body) {
-    var obj = this.obj;
-    var opts = this.opts;
-    var fn = Compiler.parse(body, obj, opts);
-    obj.blocks[name] = fn;
+    let opts = utils.extend({}, this.opts);
+    opts.args = [];
+    name = `__block_${name}`;
+    let frag = this.parseFragment(body, opts);
+    // this.tok(
+    //   utils.TokenType.COMMAND,
+    //   `${name}()`
+    // );
     this.tok(
-      utils.TokenType.COMMAND,
-      `__obj.renderBlock("${name}", ${opts.local})`
-      );
+      utils.TokenType.BLOCK,
+      name
+    );
+    this.tpl.blocks[name] = frag;
   }
 
+  /**
+   * @override (name) {
+   *   body
+   * }
+   */
   override(name, body) {
-    var obj = this.obj;
-    var opts = this.opts;
-    var fn = Compiler.parse(body, obj, opts);
-    obj.blocks[name] = fn;
+    let opts = utils.extend({}, this.opts);
+    opts.args = [];
+    name = `__block_${name}`;
+    let fnstr = this.parseFragment(body, opts);
+    this.tpl.blocks[name] = fnstr;
   }
 
+  /**
+   * @append (name) {
+   *   body
+   * }
+   */
   append(name, body) {
-    var obj = this.obj;
-    var opts = this.opts;
-    var appends = obj.appends[name] || (obj.appends[name] = []);
-    var fn = Compiler.parse(body, obj, opts);
-    appends.push(fn);
+    var tpl = this.tpl;
+    let opts = utils.extend({}, this.opts);
+    opts.args = [];
+    name = `__block_${name}`;
+    let appends = tpl.appends[name] || (tpl.appends[name] = []);
+    let frag = this.parseFragment(body, opts);
+    appends.push(frag);
   }
 
+  /**
+   * @prepend (name) {
+   *   body
+   * }
+   */
   prepend(name, body) {
-    var obj = this.obj;
-    var opts = this.opts;
-    var prepends = obj.prepends[name] || (obj.prepends[name] = []);
-    var fn = Compiler.parse(body, obj, opts);
-    prepends.push(fn);
+    var tpl = this.tpl;
+    let opts = utils.extend({}, this.opts);
+    opts.args = [];
+    name = `__block_${name}`;
+    let prepends = tpl.prepends[name] || (tpl.prepends[name] = []);
+    let frag = this.parseFragment(body, opts);
+    prepends.push(frag);
   }
 
+  /**
+   * @filter name(args) {
+   *   body
+   * }
+   */
   filter(args, body, name) {
-    var obj = this.obj;
-    var opts = this.opts;
-    var id = '__filter_' + utils.nextGUID();
-    var fn = Compiler.parse(body, obj, opts);
-    obj.blocks[id] = fn;
-    args = args.trim();
-    var arg = (args ? ',' + args : '');
+    this.scanIdentifiers(args);
+    let opts = utils.extend({}, this.opts);
+    opts.args = [];
+
+    let id = '__filter_' + utils.nextGUID();
+    let frag = this.parseFragment(body, opts);
+    this.tpl.blocks[id] = frag;
+
+    args = parseArgs(args);
+    var argstr = args.length > 0 ? `,${args.join(',')}` : '';
     this.tok(
       utils.TokenType.COMMAND,
-      `__fs["${name}"](__obj.renderBlock("${id}", ${opts.local})${arg})`
-      );
+      `__fs["${name}"](${id}()${argstr})`
+    );
   }
 }
 

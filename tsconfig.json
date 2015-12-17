@@ -2,7 +2,19 @@
 	"compilerOptions": {
 		"target": "ES5",
 		"module": "commonjs",
+    "outDir": "dist",
 		"sourceMap": true,
 		"declaration": true
-	}
+	},
+  "files": [
+    "src/global.d.ts",
+    "src/compiler.ts",
+    "src/engine.ts",
+    "src/filters.ts",
+    "src/helpers.ts",
+    "src/parser.ts",
+    "src/template.ts",
+    "src/utils.ts",
+    "src/index.ts"
+  ]
 }

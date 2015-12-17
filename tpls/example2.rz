@@ -1,0 +1,51 @@
+<p>How are you @model.name? Today is a sunny day on the planet Gunsmoke.</p>
+
+<a href="mailto:jimnox@163.com">@@<a>
+
+<ul class="@(model.active ? 'highlight' : '')">
+  @foreach ( i : m in model ){
+    <li>
+      <div>@m.name</div>
+      <div>@-m.age</div>
+      <div>[@(m.email)]</div>
+      <div>@((m.email === '' || e.email === 'unknown' ? 'unknown' : m.email) | cut(config.len||3) | encode('html:5', encoding))</div>
+      <div>[@(-m.email)]</div>
+    </li>
+  }
+</ul>
+
+<div class="page@if(pn==0){ active}"></div>
+
+<table>
+  @each (row in rows) {
+  <tr>
+    @each (col in row) {
+    <td>@col</td>
+    }
+  </tr>
+  }
+</table>
+
+
+@each (p in ViewBag.persons){
+  <div>
+
+  </div>
+}
+
+@each (person in ViewBag.list){
+  <div data-name="@(person.name)">
+    @if (person.age > 30){
+        这么大了啊~
+    } else if (person.age > 18) {
+        哎哟,不错哟,成年了
+    } else {
+        小屁孩,哈哈
+    }
+  </div>
+}
+
+
+
+<div id="confusing">
+</div>

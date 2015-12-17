@@ -1,0 +1,23 @@
+{
+  "name": "raze-tpl",
+  "version": "0.2.1",
+  "description": "A js template engine with syntax like Microsoft Razor Render Engine",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "node test/test.js",
+    "build": "tsc -p .",
+    "dev": "tsc -p . -w"
+  },
+  "author": "LiuJi-Jim <http://github.com/liuji-jim>",
+  "license": "MIT",
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/LiuJi-Jim/raze-tpl"
+    }
+  ],
+  "devDependencies": {
+    "art-template": "^3.0.3",
+    "etpl": "^3.0.1"
+  }
+}

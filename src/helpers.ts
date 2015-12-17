@@ -1,11 +1,11 @@
-module helpers {
-  export function isArray(o: any): boolean {
-    return (o instanceof Array);
-  }
+import utils = require('./utils');
 
-  export function isObject(o: any): boolean {
-    return (typeof o === 'object');
-  }
+export function isArray(o: any): boolean {
+  return Array.isArray(o);
 }
 
-export = helpers;
+export function isObject(o: any): boolean {
+  return Object.prototype.toString.call(o) === '[object Object]';
+}
+
+export var extend = utils.extend;

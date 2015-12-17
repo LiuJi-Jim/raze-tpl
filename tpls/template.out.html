@@ -1,0 +1,351 @@
+@extend (layout)
+
+<h1>@each/@foreach（同义词）遍历数组</h1>
+<ul>
+<li>&lt;myname0 [myname0@myemail.com] is 5 ages.</li>
+
+  <li>&lt;myname0 [myname0@myemail.com] is 5 ages.</li>
+
+<li>&lt;myname1 [myname1@myemail.com] is 6 ages.</li>
+
+  <li>&lt;myname1 [myname1@myemail.com] is 6 ages.</li>
+
+<li>&lt;myname2 [myname2@myemail.com] is 7 ages.</li>
+
+  <li>&lt;myname2 [myname2@myemail.com] is 7 ages.</li>
+
+<li>&lt;myname3 [myname3@myemail.com] is 8 ages.</li>
+
+  <li>&lt;myname3 [myname3@myemail.com] is 8 ages.</li>
+
+<li>&lt;myname4 [myname4@myemail.com] is 9 ages.</li>
+
+  <li>&lt;myname4 [myname4@myemail.com] is 9 ages.</li>
+
+<li>&lt;myname5 [myname5@myemail.com] is 10 ages.</li>
+
+  <li>&lt;myname5 [myname5@myemail.com] is 10 ages.</li>
+
+<li>&lt;myname6 [myname6@myemail.com] is 11 ages.</li>
+
+  <li>&lt;myname6 [myname6@myemail.com] is 11 ages.</li>
+
+<li>&lt;myname7 [myname7@myemail.com] is 12 ages.</li>
+
+  <li>&lt;myname7 [myname7@myemail.com] is 12 ages.</li>
+
+<li>&lt;myname8 [myname8@myemail.com] is 13 ages.</li>
+
+  <li>&lt;myname8 [myname8@myemail.com] is 13 ages.</li>
+
+<li>&lt;myname9 [myname9@myemail.com] is 14 ages.</li>
+
+  <li>&lt;myname9 [myname9@myemail.com] is 14 ages.</li>
+
+<li>&lt;myname10 [myname10@myemail.com] is 15 ages.</li>
+
+  <li>&lt;myname10 [myname10@myemail.com] is 15 ages.</li>
+
+<li>&lt;myname11 [myname11@myemail.com] is 16 ages.</li>
+
+  <li>&lt;myname11 [myname11@myemail.com] is 16 ages.</li>
+
+<li>&lt;myname12 [myname12@myemail.com] is 17 ages.</li>
+
+  <li>&lt;myname12 [myname12@myemail.com] is 17 ages.</li>
+
+<li>&lt;myname13 [myname13@myemail.com] is 18 ages.</li>
+
+  <li>&lt;myname13 [myname13@myemail.com] is 18 ages.</li>
+
+<li>&lt;myname14 [myname14@myemail.com] is 19 ages.</li>
+
+  <li>&lt;myname14 [myname14@myemail.com] is 19 ages.</li>
+
+<li>&lt;myname15 [myname15@myemail.com] is 20 ages.</li>
+
+  <li>&lt;myname15 [myname15@myemail.com] is 20 ages.</li>
+
+<li>&lt;myname16 [myname16@myemail.com] is 21 ages.</li>
+
+  <li>&lt;myname16 [myname16@myemail.com] is 21 ages.</li>
+
+<li>&lt;myname17 [myname17@myemail.com] is 22 ages.</li>
+
+  <li>&lt;myname17 [myname17@myemail.com] is 22 ages.</li>
+
+<li>&lt;myname18 [myname18@myemail.com] is 23 ages.</li>
+
+  <li>&lt;myname18 [myname18@myemail.com] is 23 ages.</li>
+
+<li>&lt;myname19 [myname19@myemail.com] is 24 ages.</li>
+
+  <li>&lt;myname19 [myname19@myemail.com] is 24 ages.</li>
+
+
+</ul>
+<hr />
+
+<h1>@objEach 遍历KV</h1>
+<dl>
+<dt>key-0</dt>
+  <dd>value-0</dd>
+<dt>key-1</dt>
+  <dd>value-1</dd>
+<dt>key-2</dt>
+  <dd>value-2</dd>
+<dt>key-3</dt>
+  <dd>value-3</dd>
+<dt>key-4</dt>
+  <dd>value-4</dd>
+<dt>key-5</dt>
+  <dd>value-5</dd>
+<dt>key-6</dt>
+  <dd>value-6</dd>
+<dt>key-7</dt>
+  <dd>value-7</dd>
+<dt>key-8</dt>
+  <dd>value-8</dd>
+<dt>key-9</dt>
+  <dd>value-9</dd>
+
+</dl>
+<hr />
+
+<h1>@block (body)后面把它override了，所以不应该看到Hello World</h1>
+<p style="color: blue;">This is prepended to `body`</p>
+<p style="color: green;">This is overwritten.</p>
+  <strong>use total = <h1>20</h1>
+</strong>
+<p style="color: red;">This is appended to `body`</p>
+
+<hr />
+
+<h1>@block (placeholder)本身是空的，后面把它override了，这里应该看到表格</h1>
+<table>
+  <tr>
+    <td>table-0, 0</td>
+<td>table-0, 1</td>
+<td>table-0, 2</td>
+<td>table-0, 3</td>
+<td>table-0, 4</td>
+<td>table-0, 5</td>
+<td>table-0, 6</td>
+<td>table-0, 7</td>
+<td>table-0, 8</td>
+<td>table-0, 9</td>
+
+    </tr>
+<tr>
+    <td>table-1, 0</td>
+<td>table-1, 1</td>
+<td>table-1, 2</td>
+<td>table-1, 3</td>
+<td>table-1, 4</td>
+<td>table-1, 5</td>
+<td>table-1, 6</td>
+<td>table-1, 7</td>
+<td>table-1, 8</td>
+<td>table-1, 9</td>
+
+    </tr>
+<tr>
+    <td>table-2, 0</td>
+<td>table-2, 1</td>
+<td>table-2, 2</td>
+<td>table-2, 3</td>
+<td>table-2, 4</td>
+<td>table-2, 5</td>
+<td>table-2, 6</td>
+<td>table-2, 7</td>
+<td>table-2, 8</td>
+<td>table-2, 9</td>
+
+    </tr>
+<tr>
+    <td>table-3, 0</td>
+<td>table-3, 1</td>
+<td>table-3, 2</td>
+<td>table-3, 3</td>
+<td>table-3, 4</td>
+<td>table-3, 5</td>
+<td>table-3, 6</td>
+<td>table-3, 7</td>
+<td>table-3, 8</td>
+<td>table-3, 9</td>
+
+    </tr>
+<tr>
+    <td>table-4, 0</td>
+<td>table-4, 1</td>
+<td>table-4, 2</td>
+<td>table-4, 3</td>
+<td>table-4, 4</td>
+<td>table-4, 5</td>
+<td>table-4, 6</td>
+<td>table-4, 7</td>
+<td>table-4, 8</td>
+<td>table-4, 9</td>
+
+    </tr>
+<tr>
+    <td>table-5, 0</td>
+<td>table-5, 1</td>
+<td>table-5, 2</td>
+<td>table-5, 3</td>
+<td>table-5, 4</td>
+<td>table-5, 5</td>
+<td>table-5, 6</td>
+<td>table-5, 7</td>
+<td>table-5, 8</td>
+<td>table-5, 9</td>
+
+    </tr>
+<tr>
+    <td>table-6, 0</td>
+<td>table-6, 1</td>
+<td>table-6, 2</td>
+<td>table-6, 3</td>
+<td>table-6, 4</td>
+<td>table-6, 5</td>
+<td>table-6, 6</td>
+<td>table-6, 7</td>
+<td>table-6, 8</td>
+<td>table-6, 9</td>
+
+    </tr>
+<tr>
+    <td>table-7, 0</td>
+<td>table-7, 1</td>
+<td>table-7, 2</td>
+<td>table-7, 3</td>
+<td>table-7, 4</td>
+<td>table-7, 5</td>
+<td>table-7, 6</td>
+<td>table-7, 7</td>
+<td>table-7, 8</td>
+<td>table-7, 9</td>
+
+    </tr>
+<tr>
+    <td>table-8, 0</td>
+<td>table-8, 1</td>
+<td>table-8, 2</td>
+<td>table-8, 3</td>
+<td>table-8, 4</td>
+<td>table-8, 5</td>
+<td>table-8, 6</td>
+<td>table-8, 7</td>
+<td>table-8, 8</td>
+<td>table-8, 9</td>
+
+    </tr>
+<tr>
+    <td>table-9, 0</td>
+<td>table-9, 1</td>
+<td>table-9, 2</td>
+<td>table-9, 3</td>
+<td>table-9, 4</td>
+<td>table-9, 5</td>
+<td>table-9, 6</td>
+<td>table-9, 7</td>
+<td>table-9, 8</td>
+<td>table-9, 9</td>
+
+    </tr>
+
+  </table>
+
+<hr />
+
+<h1>@override (placeholder)这里不应看到任何东西，而是出现在上面的placeholder里</h1>
+
+<hr />
+
+<h1>@func li定义函数，在第一个数组循环里有调用，这里不应该看到任何东西</h1>
+
+<hr />
+
+<h1>@override (body)重写body块，这里不应该看到任何东西，而是出现在上面的body块里</h1>
+
+<hr />
+
+<h1>@append (body)追加body块，这里不应该看到任何东西，而是出现在上面的body块之后</h1>
+
+<hr />
+
+<h1>@prepend (body)插入body块，这里不应该看到任何东西，而是出现在上面的body块之前</h1>
+
+<hr />
+
+<h1>@filter textarea(400, 200)文本块filter，这个filter是addFilter自己注册的</h1>
+<textarea style="width:400px; height:200px;">## ETpl Contributors
+
+  - errorrik
+  - otakustay
+  - firede
+</textarea>
+<hr />
+
+<h1>@func total()定义函数，这里不应该看到任何东西，而是在上面的body块里调用</h1>
+
+<hr />
+
+<h1>各种bad case测试</h1>
+
+
+<div style="max-width:400px; max-height:240px; font-family:monospace;">undefined</div>
+
+<div style="max-width:400px; max-height:240px;">undefined</div>
+
+<div>老子就是任性要打<strong>}/128150479/{}(Y!@#$%^()[]*</strong>这些乱七八糟的你咬我？</div>
+  <div>那么问题来了：要打出<strong>“@#”</strong>跟<strong>“#@”</strong>怎么办，啦啦啦~</div>
+  #@
+
+<hr />
+
+<h1>闭包</h1>
+
+
+<div>param: i am captured by param</div>
+  <div>block_capture: i am captured by block</div>
+
+<hr />
+
+<h1>import</h1>
+<h2>dynamic import</h2>
+<h3>I am imported</h3>
+<div>param: i am captured by import param</div>
+<h2>static import</h2>
+<h3>I am imported</h3>
+<div>param: hehe</div>
+
+<hr />
+
+<h1>函数递归</h1>
+
+
+<ul>
+    <li>root</li>
+    
+      <li><ul>
+    <li>a</li>
+    
+      <li><ul>
+    <li>b</li>
+    
+      <li><ul>
+    <li>c</li>
+    
+  </ul>
+</li>
+    
+  </ul>
+</li>
+    
+  </ul>
+</li>
+    
+  </ul>
+
+<hr />

@@ -4,8 +4,12 @@ var art = require('art-template');
 // to run this benchmark you should install etpl and art-template
 // npm install etpl art-template
 
-var raze = require('./index');
+var debug = false;
+
+var raze = require('../dist/index');
+var path = require('path');
 var fs = require('fs');
+var tmp = path.join(__dirname, '../tmp');
 
 var length = 2000;
 var times = 2000;
@@ -59,7 +63,7 @@ var test_etpl = (function() {
 })();
 console.log('etpl');
 var result_etpl = bench(test_etpl, times);
-fs.writeFileSync('./etpl.out.html', result_etpl, 'utf-8');
+fs.writeFileSync(path.join(tmp, 'etpl.out.html'), result_etpl, 'utf-8');
 
 var test_art = (function() {
   var tpl = [
@@ -77,7 +81,7 @@ var test_art = (function() {
 })();
 console.log('art-template');
 var result_art = bench(test_art, times);
-fs.writeFileSync('./art.out.html', result_art, 'utf-8');
+fs.writeFileSync(path.join(tmp, 'art.out.html'), result_art, 'utf-8');
 
 var test_raze_safe = (function() {
   var tpl = [
@@ -87,17 +91,21 @@ var test_raze_safe = (function() {
     '}',
     '</ul>'
   ].join('\n');
-  var render = raze(tpl, {
-    safe: true
+  var render = raze({
+    template: tpl,
+    safe: true,
+    trim: true
   });
   function test() {
     return render(data);
   }
+
+  //console.log(render.__renderFn.toString());
   return test;
 })();
 console.log('raze safe');
 var result_raze_safe = bench(test_raze_safe, times);
-fs.writeFileSync('./raze_safe.out.html', result_raze_safe, 'utf-8');
+fs.writeFileSync(path.join(tmp, 'raze_safe.out.html'), result_raze_safe, 'utf-8');
 
 var test_raze_unsafe = (function() {
   var tpl = [
@@ -107,14 +115,18 @@ var test_raze_unsafe = (function() {
     '}',
     '</ul>'
   ].join('\n');
-  var render = raze(tpl, {
-    safe: false
+  var render = raze({
+    template: tpl,
+    safe: false,
+    trim: true
   });
   function test() {
     return render(data);
   }
+
+  //console.log(render.__renderFn.toString());
   return test;
 })();
 console.log('raze unsafe');
 var result_raze_unsafe = bench(test_raze_unsafe, times);
-fs.writeFileSync('./raze_unsafe.out.html', result_raze_unsafe, 'utf-8');
+fs.writeFileSync(path.join(tmp, 'raze_unsafe.out.html'), result_raze_unsafe, 'utf-8');
