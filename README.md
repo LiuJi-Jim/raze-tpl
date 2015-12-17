@@ -31,14 +31,12 @@ var result = render(data);
 
 ### options
 
-* `safe`
-> `true` to add try/catch to variables accessing (default to `true`)
-* `strip`
-> `true` to remove whitespace (default to `false`)
-* `extname`
-> define extname when using `import` and `extend` (default to `'.html'`)
-* `plainObjEach`
-> `true` to use `Object.keys()` when loop on K-V objects (default to `true`)
+| key | usage |
+|-----|-------|
+|`safe`|`true` to add try/catch to variables accessing (default to `true`)|
+|`strip`|`true` to remove whitespace (default to `false`)|
+|`extname`|define extname when using `import` and `extend` (default to `'.html'`)|
+|`plainObjEach`|`true` to use `Object.keys()` when loop on K-V objects (default to `true`)|
 
 ### test and see the demo of syntax/features
 
