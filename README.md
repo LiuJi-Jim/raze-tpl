@@ -104,8 +104,8 @@ var result = render(data);
 }
 ```
 
-### function defination add calling
-#### defination
+### function definition add calling
+#### definition
 ```
 @func sayHello(name) {
   <span>Hello, <strong>@name</strong>!</span>
@@ -121,8 +121,8 @@ var result = render(data);
 ```
 in functions you can enjoy closure variables just like what you have in javascript
 
-### block defination and overriding
-#### defination
+### block definition and overriding
+#### definition
 ```
 @block pageBody {
   <span>default empty page body</span>
